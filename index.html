@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Deadline Manage - Version Abv.44</title>
+    <title>Deadline Manage - Version AC.4</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -53,7 +53,7 @@
     <div class="content-inner">
         <div class="top-bar">
             <div class="brand">
-                📋 <b>DEADLINE MANAGE Abv.44</b> 
+                📋 <b>DEADLINE MANAGE AC.4</b> 
                 <span class="about-btn" ondblclick="toggleAbout()">About</span>
                 <div id="aboutContent" class="about-dropdown">Developed by Mr Hưng<br>Tel : 0965594679<br>Email : ndhung.pl@gmail.com</div>
                 <span id="syncStatus" style="margin-left:10px; font-size:11px; color:var(--success);"></span> 
@@ -181,7 +181,6 @@
         await set(ref(db, 'deadlineData'), { tasks: allTasks, whitelist: whitelist, emailList: emailList });
     }
 
-    // Export to window for HTML onclick events
     window.addTask = async () => {
         const n = document.getElementById('taskName').value, s = document.getElementById('startDate').value, e = document.getElementById('deadline').value;
         const mail = document.getElementById('emailRecipient').value.trim();
@@ -211,8 +210,22 @@
         window.showNotice("Xác nhận xóa công việc này?", async (ok) => { if(ok) { allTasks = allTasks.filter(x => x.id !== id); await window.saveData(); } }, true);
     };
 
-    window.raiseHand = (id) => {
+    window.raiseHand = async (id) => {
         const t = allTasks.find(x => x.id === id);
+        const deviceIndex = whitelist.indexOf(currentID);
+
+        // Logic ràng buộc Email cho ID >= 4 (tức index >= 3)
+        if (deviceIndex >= 3) {
+            const lockedEmail = (allTasks.find(task => task.cffinish === currentID))?.email;
+            if (!lockedEmail) {
+                // Khóa vào email này cho các lần sau
+                allTasks.forEach(item => { if (item.email === t.email) item.cffinish = currentID; });
+                await silentSave();
+            } else if (t.email !== lockedEmail) {
+                return window.showNotice(`Bạn chỉ được phép giải trình cho công việc thuộc email: ${lockedEmail}`);
+            }
+        }
+
         const currentClientPart = t.comment.split(' | [Phản hồi Admin]: ')[0];
         const reason = prompt("Nhập giải trình:", currentClientPart || "");
         if (reason !== null) {
@@ -309,13 +322,16 @@
             if (deviceIndex === 2 && (new Date() - new Date(t.createdAt)) / 3600000 > 24) delDisable = true;
             
             const parts = (t.comment || "").split(' | [Phản hồi Admin]: ');
-            const hasComment = t.comment && t.comment.trim() !== "";
-            const handColor = hasComment ? '#2ecc71' : '#f1c40f'; 
-            const iconClass = hasComment ? 'fa-handshake' : 'fa-hand';
+            const hasClientPart = parts[0] && parts[0].trim() !== "";
+            const hasAdminPart = parts[1] && parts[1].trim() !== "";
+            
+            const isHandshake = hasClientPart && hasAdminPart;
+            const handColor = (hasClientPart || hasAdminPart) ? '#2ecc71' : '#f1c40f'; 
+            const iconClass = isHandshake ? 'fa-handshake' : 'fa-hand';
             
             let handTip = `Giải trình : ${parts[0] || ""}`;
             if (parts[1]) handTip += `\nAdmin phản hồi : ${parts[1]}`;
-            if (!hasComment) handTip = (deviceIndex >= 3 ? "Bấm để nhập giải trình" : "Chưa có giải trình");
+            if (!hasClientPart && !hasAdminPart) handTip = (deviceIndex >= 3 ? "Bấm để nhập giải trình" : "Chưa có giải trình");
             
             let handClick = "";
             if (deviceIndex >= 3) {
@@ -327,8 +343,8 @@
             }
 
             const isAdmin12 = (deviceIndex === 0 || deviceIndex === 1);
-            const statusStyle = (isAdmin12 && hasComment) ? 'cursor:pointer; text-decoration:underline;' : '';
-            const statusClick = (isAdmin12 && hasComment) ? `onclick="window.adminResponseToComment('${t.id}')"` : '';
+            const statusStyle = (isAdmin12 && hasClientPart) ? 'cursor:pointer; text-decoration:underline;' : '';
+            const statusClick = (isAdmin12 && hasClientPart) ? `onclick="window.adminResponseToComment('${t.id}')"` : '';
             
             body.innerHTML += `
                 <tr class="${isOverdue ? 'overdue-row' : ''}">
@@ -390,7 +406,6 @@
         document.getElementById('deviceStatus').innerText = `(ID ${idx + 1})`;
     }
 
-    // Setup navigation and events
     const inputs = ['taskName', 'taskDept', 'startDate', 'deadline', 'iterCount', 'taskRef', 'emailRecipient'].map(id => document.getElementById(id));
     inputs.forEach((input, index) => {
         input.onkeydown = (e) => {
@@ -406,7 +421,6 @@
 
     window.onclick = (e) => { if (!e.target.matches('.about-btn')) { const el = document.getElementById('aboutContent'); if(el) el.style.display = 'none'; } };
     
-    // Start application
     fetchData();
 </script>
 </body>
