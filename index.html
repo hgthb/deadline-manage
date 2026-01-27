@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Deadline Manage - Version AC.4</title>
+    <title>Deadline Manage - Version AC.5</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -29,7 +29,15 @@
         .hand-icon { font-size: 18px; cursor: pointer; }
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
         .modal-content { background-color: #fff; margin: 2% auto; padding: 20px; border: 1px solid #888; width: 95%; max-width: 1300px; border-radius: 8px; max-height: 90vh; display: flex; flex-direction: column; }
-        .report-controls { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; flex-wrap: wrap; background: #f8fafc; padding: 10px; border-radius: 6px; }
+        
+        /* Chỉnh sửa layout report controls nằm trên 1 hàng */
+        .report-controls { display: flex; gap: 8px; margin-bottom: 15px; align-items: center; flex-wrap: nowrap; background: #f8fafc; padding: 10px; border-radius: 6px; overflow-x: auto; }
+        .report-controls label { font-size: 11px; font-weight: bold; white-space: nowrap; }
+        .report-controls input[type="date"] { width: 115px; height: 30px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; padding: 0 4px; }
+        .report-controls select { height: 30px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; padding: 0 4px; }
+        #repStatus { width: 100px; }
+        #repEmailFilter { width: 160px; } /* Giới hạn chiều rộng ô email */
+
         .custom-dialog-overlay { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); align-items: center; justify-content: center; }
         .custom-dialog { background: white; width: 90%; max-width: 350px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; }
         .dialog-header { background: #f8fafc; padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
@@ -40,8 +48,12 @@
         .btn-cancel { background: #e2e8f0; color: #64748b; }
         .about-btn { margin-left: 15px; font-size: 11px; font-weight: bold; color: #c0c0c0; text-shadow: -1px -1px 1px rgba(0,0,0,0.5), 1px 1px 1px rgba(255,255,255,0.8); cursor: pointer; }
         .about-dropdown { display: none; position: absolute; top: 35px; left: 160px; background: white; border: 1px solid #ddd; padding: 12px; border-radius: 6px; z-index: 2000; box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-size: 12px; white-space: normal; }
-        .pdf-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px; }
-        .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 8px; text-align: left; }
+        
+        /* Chỉnh sửa PDF Table để xuống hàng khi nội dung dài */
+        .pdf-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px; table-layout: fixed; }
+        .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 8px; text-align: left; vertical-align: top; }
+        .pdf-table td { white-space: normal !important; word-wrap: break-word; word-break: break-word; }
+        
         body.is-readonly #adminForm, body.is-readonly .btn-add { pointer-events: none !important; filter: grayscale(1) opacity(0.3) !important; }
         .progress-bg { width: 100%; background: #eee; height: 6px; border-radius: 3px; }
         .progress-fill { height: 100%; border-radius: 3px; transition: 0.3s; }
@@ -53,7 +65,7 @@
     <div class="content-inner">
         <div class="top-bar">
             <div class="brand">
-                📋 <b>DEADLINE MANAGE AC.4</b> 
+                📋 <b>DEADLINE MANAGE AC.5</b> 
                 <span class="about-btn" ondblclick="toggleAbout()">About</span>
                 <div id="aboutContent" class="about-dropdown">Developed by Mr Hưng<br>Tel : 0965594679<br>Email : ndhung.pl@gmail.com</div>
                 <span id="syncStatus" style="margin-left:10px; font-size:11px; color:var(--success);"></span> 
@@ -103,19 +115,19 @@
         <span onclick="closeReportModal()" style="float:right; cursor:pointer; font-size:20px;">&times;</span>
         <h2 style="font-size:16px; margin-top:0;">Trích xuất báo cáo</h2>
         <div class="report-controls">
-            <label>Từ ngày:</label> <input type="date" id="repStartDate">
-            <label>Đến ngày:</label> <input type="date" id="repEndDate">
-            <label>Trạng thái:</label> 
+            <label>Từ:</label> <input type="date" id="repStartDate">
+            <label>Đến:</label> <input type="date" id="repEndDate">
+            <label>T.Thái:</label> 
             <select id="repStatus"><option value="All">Tất cả</option><option value="Đang làm">Đang làm</option><option value="Hoàn thành">Hoàn thành</option><option value="Quá hạn">Quá hạn</option></select>
             <label>Email:</label> <select id="repEmailFilter"><option value="All">Tất cả Email</option></select>
-            <button onclick="generateReport()" style="background:var(--primary); color:white; border:none; padding:5px 15px; border-radius:4px; font-size:12px; cursor:pointer;">Xem báo cáo</button>
-            <button id="btnExportPdf" onclick="exportToPDF()" style="background:var(--danger); color:white; border:none; padding:5px 15px; border-radius:4px; font-size:12px; cursor:pointer; display:none;">Xuất PDF</button>
+            <button onclick="generateReport()" style="background:var(--primary); color:white; border:none; padding:0 12px; height:30px; border-radius:4px; font-size:11px; cursor:pointer; white-space:nowrap;">Xem</button>
+            <button id="btnExportPdf" onclick="exportToPDF()" style="background:var(--danger); color:white; border:none; padding:0 12px; height:30px; border-radius:4px; font-size:11px; cursor:pointer; display:none; white-space:nowrap;">Xuất PDF</button>
         </div>
         <div style="overflow:auto; flex-grow:1; border:1px solid #eee; padding:10px;" id="reportArea">
             <div id="pdfContent">
                 <div id="pdfHeader" style="display:none; text-align:center;"><h2>BAO CAO THEO DOI DEADLINE CONG VIEC</h2><div id="pdfDateDisplay" style="margin-bottom:15px; font-size:12px;"></div></div>
                 <table class="pdf-table" id="reportTable">
-                    <thead><tr><th style="width:30px;">STT</th><th>Nội dung công việc / Bộ phận</th><th style="width:80px;">Bắt đầu</th><th style="width:80px;">Hạn chót</th><th style="width:40px;">Lần</th><th>Tham chiếu</th><th style="width:90px;">Trạng thái</th><th>Giải trình</th></tr></thead>
+                    <thead><tr><th style="width:30px;">STT</th><th style="width:180px;">Nội dung công việc / Bộ phận</th><th style="width:70px;">Bắt đầu</th><th style="width:70px;">Hạn chót</th><th style="width:35px;">Lần</th><th style="width:80px;">Tham chiếu</th><th style="width:75px;">Trạng thái</th><th style="width:auto;">Giải trình</th></tr></thead>
                     <tbody id="reportBody"></tbody>
                 </table>
             </div>
@@ -214,11 +226,9 @@
         const t = allTasks.find(x => x.id === id);
         const deviceIndex = whitelist.indexOf(currentID);
 
-        // Logic ràng buộc Email cho ID >= 4 (tức index >= 3)
         if (deviceIndex >= 3) {
             const lockedEmail = (allTasks.find(task => task.cffinish === currentID))?.email;
             if (!lockedEmail) {
-                // Khóa vào email này cho các lần sau
                 allTasks.forEach(item => { if (item.email === t.email) item.cffinish = currentID; });
                 await silentSave();
             } else if (t.email !== lockedEmail) {
