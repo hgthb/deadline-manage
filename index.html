@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Deadline Manage - Version AC.5</title>
+    <title>Deadline Manage - Version AC.6</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -30,26 +30,28 @@
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
         .modal-content { background-color: #fff; margin: 2% auto; padding: 20px; border: 1px solid #888; width: 95%; max-width: 1300px; border-radius: 8px; max-height: 90vh; display: flex; flex-direction: column; }
         
-        /* Chỉnh sửa layout report controls nằm trên 1 hàng */
         .report-controls { display: flex; gap: 8px; margin-bottom: 15px; align-items: center; flex-wrap: nowrap; background: #f8fafc; padding: 10px; border-radius: 6px; overflow-x: auto; }
         .report-controls label { font-size: 11px; font-weight: bold; white-space: nowrap; }
         .report-controls input[type="date"] { width: 115px; height: 30px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; padding: 0 4px; }
         .report-controls select { height: 30px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; padding: 0 4px; }
         #repStatus { width: 100px; }
-        #repEmailFilter { width: 160px; } /* Giới hạn chiều rộng ô email */
+        #repEmailFilter { width: 160px; }
 
         .custom-dialog-overlay { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); align-items: center; justify-content: center; }
-        .custom-dialog { background: white; width: 90%; max-width: 350px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; }
+        .custom-dialog { background: white; width: 95%; max-width: 380px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; }
         .dialog-header { background: #f8fafc; padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .dialog-body { padding: 20px 15px; font-size: 14px; line-height: 1.5; color: #475569; text-align: center; }
+        .dialog-body { padding: 15px; font-size: 14px; line-height: 1.5; color: #475569; text-align: center; }
         .dialog-footer { padding: 10px 15px; background: #f8fafc; display: flex; gap: 10px; justify-content: center; }
         .dialog-btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; min-width: 80px; }
         .btn-confirm { background: var(--primary); color: white; }
         .btn-cancel { background: #e2e8f0; color: #64748b; }
+        
+        /* Input cho Admin Response */
+        #dialogInput { width: 100%; padding: 8px; margin-top: 10px; border: 1px solid #ddd; border-radius: 4px; display: none; box-sizing: border-box; font-family: inherit; }
+
         .about-btn { margin-left: 15px; font-size: 11px; font-weight: bold; color: #c0c0c0; text-shadow: -1px -1px 1px rgba(0,0,0,0.5), 1px 1px 1px rgba(255,255,255,0.8); cursor: pointer; }
         .about-dropdown { display: none; position: absolute; top: 35px; left: 160px; background: white; border: 1px solid #ddd; padding: 12px; border-radius: 6px; z-index: 2000; box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-size: 12px; white-space: normal; }
         
-        /* Chỉnh sửa PDF Table để xuống hàng khi nội dung dài */
         .pdf-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px; table-layout: fixed; }
         .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 8px; text-align: left; vertical-align: top; }
         .pdf-table td { white-space: normal !important; word-wrap: break-word; word-break: break-word; }
@@ -65,7 +67,7 @@
     <div class="content-inner">
         <div class="top-bar">
             <div class="brand">
-                📋 <b>DEADLINE MANAGE AC.5</b> 
+                📋 <b>DEADLINE MANAGE AC.6</b> 
                 <span class="about-btn" ondblclick="toggleAbout()">About</span>
                 <div id="aboutContent" class="about-dropdown">Developed by Mr Hưng<br>Tel : 0965594679<br>Email : ndhung.pl@gmail.com</div>
                 <span id="syncStatus" style="margin-left:10px; font-size:11px; color:var(--success);"></span> 
@@ -117,7 +119,7 @@
         <div class="report-controls">
             <label>Từ:</label> <input type="date" id="repStartDate">
             <label>Đến:</label> <input type="date" id="repEndDate">
-            <label>T.Thái:</label> 
+            <label>Trạng Thái:</label> 
             <select id="repStatus"><option value="All">Tất cả</option><option value="Đang làm">Đang làm</option><option value="Hoàn thành">Hoàn thành</option><option value="Quá hạn">Quá hạn</option></select>
             <label>Email:</label> <select id="repEmailFilter"><option value="All">Tất cả Email</option></select>
             <button onclick="generateReport()" style="background:var(--primary); color:white; border:none; padding:0 12px; height:30px; border-radius:4px; font-size:11px; cursor:pointer; white-space:nowrap;">Xem</button>
@@ -127,7 +129,7 @@
             <div id="pdfContent">
                 <div id="pdfHeader" style="display:none; text-align:center;"><h2>BAO CAO THEO DOI DEADLINE CONG VIEC</h2><div id="pdfDateDisplay" style="margin-bottom:15px; font-size:12px;"></div></div>
                 <table class="pdf-table" id="reportTable">
-                    <thead><tr><th style="width:30px;">STT</th><th style="width:180px;">Nội dung công việc / Bộ phận</th><th style="width:70px;">Bắt đầu</th><th style="width:70px;">Hạn chót</th><th style="width:35px;">Lần</th><th style="width:80px;">Tham chiếu</th><th style="width:75px;">Trạng thái</th><th style="width:auto;">Giải trình</th></tr></thead>
+                    <thead><tr><th style="width:30px;">STT</th><th style="width:250px;">Nội dung công việc / Bộ phận</th><th style="width:70px;">Bắt đầu</th><th style="width:70px;">Hạn chót</th><th style="width:35px;">Lần</th><th style="width:80px;">Tham chiếu</th><th style="width:75px;">Trạng thái</th><th style="width:auto;">Giải trình</th></tr></thead>
                     <tbody id="reportBody"></tbody>
                 </table>
             </div>
@@ -137,8 +139,9 @@
 
 <div id="dialogOverlay" class="custom-dialog-overlay">
     <div class="custom-dialog">
-        <div class="dialog-header"><span>Notice!</span><i class="fa-solid fa-bell" style="font-size:12px; color:var(--primary);"></i></div>
+        <div class="dialog-header"><span>Notice !</span><i class="fa-solid fa-bell" style="font-size:12px; color:var(--primary);"></i></div>
         <div id="dialogBody" class="dialog-body"></div>
+        <input type="text" id="dialogInput" placeholder="Nhập nội dung...">
         <div class="dialog-footer">
             <button id="dialogOk" class="dialog-btn btn-confirm">OK</button>
             <button id="dialogCancel" class="dialog-btn btn-cancel" style="display:none;">Cancel</button>
@@ -245,26 +248,45 @@
         }
     };
 
+    // Hàm Admin Response được chỉnh sửa để hiện Notice !
     window.adminResponseToComment = (id) => {
         const t = allTasks.find(x => x.id === id);
         const clientPart = t.comment.split(' | [Phản hồi Admin]: ')[0];
-        const response = prompt(`NHÂN VIÊN GIẢI TRÌNH:\n"${clientPart}"\n\nNhập phản hồi (Đồng ý hoặc Yêu cầu thay đổi):`, "");
-        if (response !== null && response.trim() !== "") {
-            t.comment = `${clientPart} | [Phản hồi Admin]: ${response.trim()}`;
-            window.saveData();
-        }
+        const msg = `NHÂN VIÊN GIẢI TRÌNH:<br>"${clientPart}"<br><br>Nhập phản hồi (Đồng ý hoặc Yêu cầu thay đổi):`;
+        
+        window.showNotice(msg, async (ok) => {
+            if(ok) {
+                const val = document.getElementById('dialogInput').value.trim();
+                if(val !== "") {
+                    t.comment = `${clientPart} | [Phản hồi Admin]: ${val}`;
+                    window.saveData();
+                }
+            }
+        }, true, true);
     };
 
-    window.showNotice = (msg, callback = null, isConfirm = false) => {
+    window.showNotice = (msg, callback = null, isConfirm = false, isPrompt = false) => {
         const overlay = document.getElementById('dialogOverlay');
         const body = document.getElementById('dialogBody');
+        const input = document.getElementById('dialogInput');
         const okBtn = document.getElementById('dialogOk');
         const cancelBtn = document.getElementById('dialogCancel');
+        
         body.innerHTML = msg.replace(/\n/g, '<br>');
         cancelBtn.style.display = isConfirm ? 'block' : 'none';
+        input.style.display = isPrompt ? 'block' : 'none';
+        if(isPrompt) input.value = "";
+        
         overlay.style.display = 'flex';
-        okBtn.onclick = () => { overlay.style.display = 'none'; if(callback) callback(true); };
-        cancelBtn.onclick = () => { overlay.style.display = 'none'; if(callback) callback(false); };
+        
+        okBtn.onclick = () => { 
+            overlay.style.display = 'none'; 
+            if(callback) callback(true); 
+        };
+        cancelBtn.onclick = () => { 
+            overlay.style.display = 'none'; 
+            if(callback) callback(false); 
+        };
     };
 
     window.openReportModal = () => { document.getElementById('reportModal').style.display = "block"; };
