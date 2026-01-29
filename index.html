@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Deadline Manage - Version AC.6</title>
+    <title>Deadline Manage - Version AC.7</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -46,7 +46,6 @@
         .btn-confirm { background: var(--primary); color: white; }
         .btn-cancel { background: #e2e8f0; color: #64748b; }
         
-        /* Input cho Admin Response */
         #dialogInput { width: 100%; padding: 8px; margin-top: 10px; border: 1px solid #ddd; border-radius: 4px; display: none; box-sizing: border-box; font-family: inherit; }
 
         .about-btn { margin-left: 15px; font-size: 11px; font-weight: bold; color: #c0c0c0; text-shadow: -1px -1px 1px rgba(0,0,0,0.5), 1px 1px 1px rgba(255,255,255,0.8); cursor: pointer; }
@@ -67,7 +66,7 @@
     <div class="content-inner">
         <div class="top-bar">
             <div class="brand">
-                📋 <b>DEADLINE MANAGE AC.6</b> 
+                📋 <b>DEADLINE MANAGE AC.7</b> 
                 <span class="about-btn" ondblclick="toggleAbout()">About</span>
                 <div id="aboutContent" class="about-dropdown">Developed by Mr Hưng<br>Tel : 0965594679<br>Email : ndhung.pl@gmail.com</div>
                 <span id="syncStatus" style="margin-left:10px; font-size:11px; color:var(--success);"></span> 
@@ -151,7 +150,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+    import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyCNegCLjwMoQ0Hn7PdHOOWoEUnL9ECkpuc",
@@ -184,12 +183,50 @@
             allTasks = data.tasks || [];
             whitelist = data.whitelist || [];
             if (data.emailList) emailList = data.emailList;
+            
+            // Tự động kiểm tra backup khi có dữ liệu mới tải về
+            await autoBackupByYear();
+            
             await silentSecurityCheck();
             updateEmailDatalist();
             await checkOverdueAndAutoMail();
             renderTable();
             document.getElementById('taskName').focus();
         });
+    }
+
+    // --- LOGIC BACKUP DỮ LIỆU THEO NĂM ---
+    async function autoBackupByYear() {
+        if (allTasks.length === 0) return;
+
+        // Lấy record thêm vào sau cùng (cuối mảng)
+        const lastRecord = allTasks[allTasks.length - 1];
+        if (!lastRecord.createdAt) return;
+
+        const recordYear = new Date(lastRecord.createdAt).getFullYear();
+        const currentYear = new Date().getFullYear();
+
+        // Nếu năm của record nhỏ hơn năm hiện tại
+        if (recordYear < currentYear) {
+            const backupPath = `deadline${recordYear}`;
+            console.log(`Đang thực hiện backup dữ liệu năm ${recordYear}...`);
+            
+            try {
+                // 1. Lưu toàn bộ dữ liệu hiện tại sang nút backup
+                await set(ref(db, backupPath), {
+                    tasks: allTasks,
+                    backupAt: new Date().toISOString()
+                });
+
+                // 2. Xóa hết record trong allTasks để nhập liệu năm mới
+                allTasks = [];
+                await silentSave();
+                
+                window.showNotice(`Hệ thống đã tự động sao lưu dữ liệu năm ${recordYear} vào mục "${backupPath}" và làm trống danh sách cho năm mới ${currentYear}.`);
+            } catch (err) {
+                console.error("Lỗi khi backup dữ liệu:", err);
+            }
+        }
     }
 
     async function silentSave() {
@@ -248,7 +285,6 @@
         }
     };
 
-    // Hàm Admin Response được chỉnh sửa để hiện Notice !
     window.adminResponseToComment = (id) => {
         const t = allTasks.find(x => x.id === id);
         const clientPart = t.comment.split(' | [Phản hồi Admin]: ')[0];
